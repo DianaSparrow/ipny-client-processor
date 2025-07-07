@@ -43,10 +43,14 @@
                 <div id="analysisText"></div>
             </div>
             
-            <div class="email-section">
-                <h3>📧 Draft Email Reply</h3>
-                <button class="copy-btn email-copy-btn" onclick="copyEmailDraft()">📋 Copy Email Draft</button>
-                <div id="emailDraft"></div>
+            <div class="reply-section">
+                <button class="copy-btn reply-btn" id="generateReplyBtn" onclick="generateEmailReply()" style="display: none;">✍️ Generate Email Reply</button>
+                
+                <div class="email-section" id="emailSection" style="display: none;">
+                    <h3>📧 Draft Email Reply</h3>
+                    <button class="copy-btn email-copy-btn" onclick="copyEmailDraft()">📋 Copy Email Draft</button>
+                    <div id="emailDraft"></div>
+                </div>
             </div>
         </div>
     </div>
