@@ -135,6 +135,15 @@ button {
     background: #3367d6;
 }
 
+.reply-btn {
+    background: #9b59b6;
+    margin-bottom: 20px;
+}
+
+.reply-btn:hover {
+    background: #8e44ad;
+}
+
 .email-copy-btn {
     background: #27ae60;
     margin-bottom: 15px;
@@ -190,12 +199,18 @@ button {
     color: #34495e;
 }
 
-.email-section {
+.reply-section {
     margin-top: 25px;
+    text-align: center;
+}
+
+.email-section {
     padding: 20px;
     background: white;
     border-radius: 10px;
     border: 2px solid #27ae60;
+    text-align: left;
+    margin-top: 20px;
 }
 
 .email-section div {
