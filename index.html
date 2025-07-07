@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPNY Client Processor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🇮🇹 IPNY Email Processor</h1>
+        
+        <div class="email-input-section">
+            <label for="clientEmail">Client Email Address:</label>
+            <input type="email" id="clientEmail" placeholder="Paste or type client's email address">
+        </div>
+        
+        <div class="form-section">
+            <label for="emailContent">Email Body Content:</label>
+            <textarea id="emailContent" placeholder="Paste the email body content here - the client's message about their Italian citizenship needs..."></textarea>
+        </div>
+        
+        <div class="form-section">
+            <label for="additionalInfo">Additional Information (optional):</label>
+            <textarea id="additionalInfo" placeholder="Add any extra details not in the email: Lorenzo's notes, phone conversation details, referral context, document estimates from previous discussions, special circumstances, etc."></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button class="process-btn" onclick="processEmail()">🚀 Process Email & Generate Sheet Data</button>
+            <button class="clear-btn" onclick="clearForm()">Clear</button>
+        </div>
+        
+        <div class="output-section" id="outputSection">
+            <div class="success-note">✅ Ready to add to Google Sheet!</div>
+            <div class="output-buttons">
+                <button class="copy-btn" onclick="copyToClipboard()">📋 Copy Row Data</button>
+                <button class="copy-btn sheet-btn" onclick="openGoogleSheet()">📊 Open Google Sheet</button>
+            </div>
+            <div class="output-text" id="outputText"></div>
+            
+            <div class="analysis-section">
+                <h3>📋 IPNY Analysis</h3>
+                <div id="analysisText"></div>
+            </div>
+            
+            <div class="email-section">
+                <h3>📧 Draft Email Reply</h3>
+                <button class="copy-btn email-copy-btn" onclick="copyEmailDraft()">📋 Copy Email Draft</button>
+                <div id="emailDraft"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
