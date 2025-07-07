@@ -16,7 +16,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Main processing function
+// Format date to match Google Sheet format (7 Jul 2025)
+function formatDate(date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+}
+
+// Main processing function - generates sheet data and analysis only
 async function processEmail() {
     const emailContent = document.getElementById('emailContent').value.trim();
     const clientEmail = document.getElementById('clientEmail').value.trim();
@@ -33,6 +43,10 @@ async function processEmail() {
     outputSection.classList.add('show');
     outputText.innerHTML = '<div class="loading">🔍 Analyzing email and estimating documents...</div>';
     
+    // Hide email section initially
+    document.getElementById('emailSection').style.display = 'none';
+    document.getElementById('generateReplyBtn').style.display = 'inline-block';
+    
     try {
         // First request: Generate Google Sheet data
         const prompt = createSheetDataPrompt(clientEmail, emailContent, additionalInfo);
@@ -45,19 +59,41 @@ async function processEmail() {
         const analysisResponse = await window.claude.complete(analysisPrompt);
         document.getElementById('analysisText').textContent = analysisResponse;
         
-        // Third request: Generate email draft
-        const emailPrompt = createEmailDraftPrompt(clientEmail, emailContent, additionalInfo);
-        const emailResponse = await window.claude.complete(emailPrompt);
-        emailDraftData = emailResponse;
-        document.getElementById('emailDraft').textContent = emailResponse;
-        
     } catch (error) {
         outputText.innerHTML = `<div class="error">❌ Error processing email: ${error.message}</div>`;
     }
 }
 
-// Create prompt for Google Sheet data
+// Generate email reply - separate function
+async function generateEmailReply() {
+    const emailContent = document.getElementById('emailContent').value.trim();
+    const clientEmail = document.getElementById('clientEmail').value.trim();
+    const additionalInfo = document.getElementById('additionalInfo').value.trim();
+    
+    const emailSection = document.getElementById('emailSection');
+    const emailDraft = document.getElementById('emailDraft');
+    
+    emailSection.style.display = 'block';
+    emailDraft.innerHTML = '<div class="loading">✍️ Generating email reply...</div>';
+    
+    try {
+        const emailPrompt = createEmailDraftPrompt(clientEmail, emailContent, additionalInfo);
+        const emailResponse = await window.claude.complete(emailPrompt);
+        emailDraftData = emailResponse;
+        emailDraft.textContent = emailResponse;
+        
+        // Hide the generate reply button after generating
+        document.getElementById('generateReplyBtn').style.display = 'none';
+        
+    } catch (error) {
+        emailDraft.innerHTML = `<div class="error">❌ Error generating email: ${error.message}</div>`;
+    }
+}
+
+// Create prompt for Google Sheet data with exact column format
 function createSheetDataPrompt(clientEmail, emailContent, additionalInfo) {
+    const today = formatDate(new Date());
+    
     return `Analyze this client inquiry for an Italian citizenship document service. Extract information and estimate document needs.
 
 CLIENT EMAIL ADDRESS: ${clientEmail || 'Not provided'}
@@ -68,15 +104,15 @@ ${emailContent}
 ADDITIONAL INFORMATION: ${additionalInfo || 'None provided'}
 
 ANALYSIS INSTRUCTIONS:
-1. Extract client name from how they sign the email, introduce themselves, or any name mentioned (check additional info too)
+1. Extract client name from how they sign the email, introduce themselves, or any name mentioned
 2. Use provided email address, or extract from signature if email field empty
 3. Determine referral source using ALL information provided:
-   - If mentions "Lorenzo" anywhere = "Lorenzo"
-   - If mentions being referred by someone = "Referral" 
+   - If mentions "Lorenzo" or "Agnoloni" anywhere = "Agnoloni"
+   - If mentions being referred by someone else = use their name or "Friend"
    - If mentions finding website/googling = "Website"
    - Check additional info for referral context
-   - Otherwise = "Direct Inquiry"
-4. Estimate US vital records needed based on ALL family info from email body AND additional information:
+   - Otherwise = "Direct inquiry"
+4. Estimate US vital records needed based on ALL family info:
    - Count birth certificates (client + ancestors in citizenship line)
    - Count marriage certificates (couples in citizenship line)
    - Count death certificates (deceased individuals mentioned)
@@ -84,24 +120,22 @@ ANALYSIS INSTRUCTIONS:
    - Do NOT count Italian documents or naturalization (Lorenzo handles those)
    - Use any document estimates mentioned in additional info
    - If minimal family details provided, estimate 4-6 documents as typical
-5. Organize additional information appropriately:
-   - Document-related details → use for estimate refinement
-   - Special circumstances → include in Notes
-   - Referral context → use for Referral Source
-   - Timeline info → include in Notes if relevant
 
-RESPOND WITH ONLY tab-separated data for Google Sheet:
-Lead Status	Name	Email	Referral Source	Last Contact	Est. Documents	Potential Quote	Actual Quote	Notes
+RESPOND WITH ONLY tab-separated data for Google Sheet with these EXACT 12 columns:
+Status	Name	Email	Referred by	Initial inquiry	Project start	Last update	Number of docs	Potential Quote	Actual Quote	PAID	Notes
 
 Format requirements:
-- Lead Status: New Lead (always use this for new entries)
+- Status: New Lead
 - Name: Full name as they sign their message or introduce themselves
 - Email: Use provided email or extract from signature
-- Referral Source: One of the options above, informed by all information
-- Last Contact: ${new Date().toLocaleDateString()}
-- Est. Documents: Number only (your best estimate using all info)
-- Potential Quote: $X,XXX (Est. Documents × $130)
+- Referred by: Use referral source logic above
+- Initial inquiry: ${today}
+- Project start: (leave blank)
+- Last update: ${today}
+- Number of docs: Number only (your best estimate)
+- Potential Quote: $X,XXX.XX (Number of docs × $130, formatted with dollar sign and decimals)
 - Actual Quote: (leave blank)
+- PAID: (leave blank)
 - Notes: Brief summary combining inquiry details and relevant additional info (under 50 words)
 
 Respond with ONLY the single tab-separated line, no explanations.`;
@@ -187,7 +221,7 @@ Format as a complete email ready to send.`;
 
 // Utility functions
 function openGoogleSheet() {
-    window.open('https://docs.google.com/spreadsheets/d/1PGQWAvHBVX94P2MMSd0k6px4C7El2VdsBzjKzbNthC0/edit?gid=0#gid=0', '_blank');
+    window.open('https://docs.google.com/spreadsheets/d/1PGQWAvHBVX94P2MMSd0k6px4C7El2VdsBzjKzbNthC0/edit?gid=411815426#gid=411815426', '_blank');
 }
 
 function copyToClipboard() {
@@ -211,7 +245,7 @@ function copyToClipboard() {
 
 function copyEmailDraft() {
     if (!emailDraftData) {
-        alert('No email draft to copy. Please process a client first.');
+        alert('No email draft to copy. Please generate the email reply first.');
         return;
     }
     
@@ -233,6 +267,8 @@ function clearForm() {
     document.getElementById('clientEmail').value = '';
     document.getElementById('additionalInfo').value = '';
     document.getElementById('outputSection').classList.remove('show');
+    document.getElementById('emailSection').style.display = 'none';
+    document.getElementById('generateReplyBtn').style.display = 'none';
     processedData = '';
     emailDraftData = '';
     
